@@ -1,20 +1,18 @@
-pipeline {
-    agent {
-        docker {
-            image 'node:16-buster-slim'
-            args '-p 3000:3000'
-        }
-    }
-    stages {
+node {
+	docker.image('maven:3.9.0-eclipse-temurin-11').inside('-v /root/.m2:/root/.m2')
+    {		
         stage('Build') {
+            sh 'mvn -B -DskipTest clean package'
+        }
+        stage('Test') {
             steps {
-                sh 'npm install'
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
             }
         }
-        stage('Test') { 
-            steps {
-                sh './jenkins/scripts/test.sh' 
-            }
-        }
-    }
+	}
 }
